@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import {  EyeTwoTone, EyeInvisibleOutlined,MailOutlined } from '@ant-design/icons';
+import { EyeTwoTone, EyeInvisibleOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Input, Form, Row, Col } from 'antd';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from './../../config/firebase';
 import { useAuthContext } from '../../context/AuthContext';
 
-const initialState = {  email: '', password: '' }
+const initialState = { email: '', password: '' }
 export default function Login() {
   const [state, setState] = useState(initialState)
   const [isProcessing, setIsProcessing] = useState(false)
-  const {dispatch} = useAuthContext();
+  const { dispatch } = useAuthContext();
 
   const handleChange = e => setState(s => ({ ...s, [e.target.name]: e.target.value }))
   const handleLogin = (e) => {
     e.preventDefault();
-    let {  email, password,  } = state
+    let { email, password, } = state
     email = email.trim();
 
-    if ( email === '' || password === '' ) { return window.toastify("All fields are must required", 'error') }
+    if (email === '' || password === '') { return window.toastify("All fields are must required", 'error') }
     if (password.length < 6) { return window.toastify("Password must contain 6 chars", 'error') }
 
     setIsProcessing(true);
@@ -28,19 +28,22 @@ export default function Login() {
         // console.log("user", user)
         window.toastify("Successfully login", "success")
         setIsProcessing(false);
-        dispatch({type:'SET_LOGGED_IN', payload:{user}})
+        dispatch({ type: 'SET_LOGGED_IN', payload: { user } })
         setState(initialState)
       })
       .catch((error) => {
-        console.log("error",error)
+        console.log("error", error)
         switch (error.code) {
           case 'auth/invalid-credential':
-             window.toastify("Invalid email and password",'error'); break;
+            window.toastify("Invalid email and password", 'error'); break;
           default:
-            window.toastify("Something went wrong  while creating new user",'error');
+            window.toastify("Something went wrong  while creating new user", 'error');
         }
         setIsProcessing(false);
       });
+
+
+
 
   }
   return (

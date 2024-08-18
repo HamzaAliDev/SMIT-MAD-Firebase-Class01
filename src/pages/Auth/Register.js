@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { UserOutlined, EyeTwoTone, EyeInvisibleOutlined,MailOutlined } from '@ant-design/icons';
+import { UserOutlined, EyeTwoTone, EyeInvisibleOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Input, Form, Row, Col } from 'antd';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from './../../config/firebase'
+import { auth, firestore } from './../../config/firebase'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 const initialState = { fullName: '', email: '', password: '', confirmPassword: '' }
 export default function Register() {
@@ -22,24 +23,42 @@ export default function Register() {
     if (password.length < 6) { return window.toastify("Password must contain 6 chars", 'error') }
     if (confirmPassword !== password) { return window.toastify("Password doesn't match", "error") }
 
+
+    const addData = async (user) => {
+      try {
+         await setDoc(doc(firestore, "users",user.uid), {
+          fullName,
+          email,
+          id: user.uid,
+          createdAt: serverTimestamp(),
+          roles: ['admin']
+        });
+      } catch (e) {
+        console.error("Error adding document: ", e);
+      }
+
+    }
+
     setIsProcessing(true);
     createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         // Signed up 
         const user = userCredential.user;
-        // console.log("user", user)
+        addData(user);
+
         window.toastify("Successfully registered", "success")
         setIsProcessing(false);
-        setState(initialState)
+        setState(initialState);
       })
       .catch((error) => {
         // console.log("error",error)
         switch (error.code) {
           case 'auth/email-already-in-use':
-             window.toastify("Email address already is used",'error'); break;
+            window.toastify("Email address already is used", 'error'); break;
           default:
-            window.toastify("Something went wrong  while creating new user",'error');
+            window.toastify("Something went wrong  while creating new user", 'error');
         }
+        setIsProcessing(false);
       });
 
   }
